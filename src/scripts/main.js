@@ -6,13 +6,14 @@
 const inputBox = document.getElementById('input-box');
 const listContainer = document.getElementById('list-container');
 const addButton = document.getElementById('add-task-btn');
-// Добавлен элемент для кнопки
 
 // Загружаем сохранённые данные при загрузке страницы
-document.addEventListener('DOMContentLoaded', loadData);
+document.addEventListener('DOMContentLoaded', function() {
+  loadData();
 
-// Добавляем обработчик событий для кнопки "Добавить задачу"
-addButton.addEventListener('click', addTask);
+  // Добавляем обработчик событий для кнопки "Добавить задачу"
+  addButton.addEventListener('click', addTask);
+});
 
 // Функция для добавления задачи
 function addTask() {
@@ -21,18 +22,16 @@ function addTask() {
     window.alert('You have to write something!');
   } else {
     const li = document.createElement('li');
-
     li.classList.add('todo-app__item');
     li.textContent = inputBox.value;
     listContainer.appendChild(li);
 
     const span = document.createElement('span');
-
     span.innerHTML = '\u00d7'; // Символ крестика
     span.classList.add('todo-app__item-remove');
     li.appendChild(span);
 
-    // Добавление задачи
+    // Очистка поля ввода после добавления
     inputBox.value = '';
     saveData();
 
@@ -52,33 +51,37 @@ function addTask() {
 
 // Сохранение данных в localStorage
 function saveData() {
-  localStorage.setItem('data', listContainer.innerHTML);
+  try {
+    localStorage.setItem('data', listContainer.innerHTML);
+  } catch (e) {
+    console.error('Ошибка сохранения в localStorage:', e);
+  }
 }
 
 // Загрузка данных из localStorage
 function loadData() {
-  const savedData = localStorage.getItem('data');
+  try {
+    const savedData = localStorage.getItem('data');
 
-  if (savedData) {
-    listContainer.innerHTML = savedData;
+    if (savedData) {
+      listContainer.innerHTML = savedData;
 
-    // Восстанавливаем функциональность для каждой задачи
-    const items = listContainer.getElementsByClassName('todo-app__item');
+      // Восстанавливаем функциональность для каждой задачи
+      const items = listContainer.getElementsByClassName('todo-app__item');
+      for (const item of items) {
+        const span = item.querySelector('.todo-app__item-remove');
+        span.onclick = function() {
+          listContainer.removeChild(item);
+          saveData();
+        };
 
-    for (const item of items) {
-      // Восстанавливаем состояние крестика
-      const span = item.querySelector('.todo-app__item-remove');
-
-      span.onclick = function() {
-        listContainer.removeChild(item);
-        saveData();
-      };
-
-      // Восстанавливаем состояние для выполнения задачи
-      item.onclick = function() {
-        item.classList.toggle('todo-app__item--checked');
-        saveData();
-      };
+        item.onclick = function() {
+          item.classList.toggle('todo-app__item--checked');
+          saveData();
+        };
+      }
     }
+  } catch (e) {
+    console.error('Ошибка загрузки из localStorage:', e);
   }
 }
